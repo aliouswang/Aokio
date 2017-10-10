@@ -5,12 +5,15 @@ package com.okio;
  */
 public class Segment {
 
-    private static final int DEFAULT_SIZE = 2048;// 2KB
+    static final int DEFAULT_SIZE = 2048;// 2KB
 
-    private Segment prev;
-    private Segment next;
+    Segment prev;
+    Segment next;
 
     private byte[] data;
+
+    int pos;
+    int limit;
 
     public Segment() {
         data = new byte[DEFAULT_SIZE];
@@ -37,11 +40,17 @@ public class Segment {
         Segment result = next != null ? next : null;
         next = null;
         prev = null;
+        SegmentPool.INSTANCE.recycle(this);
         return result;
     }
 
     public Segment push() {
-
+        Segment result = SegmentPool.INSTANCE.take();
+        result.prev = this;
+        result.next = this.next;
+        this.next.prev = result;
+        this.next = result;
+        return result;
     }
 
 }
